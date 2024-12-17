@@ -42,9 +42,16 @@ export class MouseController {
     switch (selectedTool) {
       case 'move':
         if (clickedPolygon) {
-          this.isDragging = true;
-          this.draggedPolygon = clickedPolygon;
-          clickedPolygon.startDrag();
+          // Try to start dragging a point first
+          if (clickedPolygon.startPointDrag(worldPos.x, worldPos.y)) {
+            this.isDragging = true;
+            this.draggedPolygon = clickedPolygon;
+          } else {
+            // If not clicking on a point, start dragging the whole polygon
+            this.isDragging = true;
+            this.draggedPolygon = clickedPolygon;
+            clickedPolygon.startDrag();
+          }
         } else {
           // Start canvas panning
           this.isDragging = true;
@@ -89,10 +96,18 @@ export class MouseController {
         break;
 
       case 'edit':
-        // Handle polygon selection
         if (clickedPolygon) {
           setSelectedPolygonId(clickedPolygon.id);
           this.canvasController.getLabelLayer().selectPolygon(clickedPolygon);
+
+          // If clicking on a point, start dragging it
+          if (clickedPolygon.startPointDrag(worldPos.x, worldPos.y)) {
+            this.isDragging = true;
+            this.draggedPolygon = clickedPolygon;
+          } else {
+            // If clicking on a line, add a new point
+            clickedPolygon.insertPointOnLine(worldPos.x, worldPos.y);
+          }
         } else {
           setSelectedPolygonId(null);
           this.canvasController.getLabelLayer().clearSelection();
@@ -109,7 +124,7 @@ export class MouseController {
     const dy = worldPos.y - this.dragStartY;
 
     if (this.draggedPolygon) {
-      // Move the polygon
+      // Move the polygon or point
       this.draggedPolygon.moveBy(dx, dy);
     } else {
       // Pan the canvas
@@ -124,6 +139,9 @@ export class MouseController {
   }
 
   public onMouseUp(e: MouseEvent) {
+    if (this.draggedPolygon) {
+      this.draggedPolygon.endDrag();
+    }
     this.isDragging = false;
     this.draggedPolygon = null;
   }
