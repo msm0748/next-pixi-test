@@ -1,4 +1,6 @@
 import { CanvasController } from '../CanvasController'
+import { useCanvasStore } from '../../store/canvasStore'
+import { Tool } from '../../types'
 
 export class KeyboardController {
   private canvasController: CanvasController
@@ -8,19 +10,53 @@ export class KeyboardController {
   }
 
   public onKeyDown(e: KeyboardEvent) {
-    switch (e.key) {
-      case 'Escape':
-        // Cancel current action
+    const { selectedTool, isDrawing, selectedPolygonId } = useCanvasStore.getState()
+    const { setSelectedTool, setIsDrawing, clearPoints } = useCanvasStore.getState().actions
+
+    // Don't handle shortcuts if user is typing in an input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return
+    }
+
+    switch (e.key.toLowerCase()) {
+      case 'v':
+        setSelectedTool('move')
         break
-      case 'Delete':
-        // Delete selected item
+      case 'p':
+        setSelectedTool('polygon')
+        break
+      case 'b':
+        setSelectedTool('bezier')
+        break
+      case 'e':
+        setSelectedTool('edit')
+        break
+      case 'escape':
+        if (isDrawing) {
+          this.canvasController.getLabelLayer().cancelCurrentPolygon()
+          setIsDrawing(false)
+          clearPoints()
+        }
+        break
+      case 'enter':
+        if (isDrawing) {
+          this.canvasController.getLabelLayer().completePolygon()
+          setIsDrawing(false)
+          clearPoints()
+        }
+        break
+      case 'backspace':
+      case 'delete':
+        if (selectedPolygonId) {
+          this.canvasController.getLabelLayer().removePolygon(selectedPolygonId)
+        }
         break
       case 'z':
         if (e.ctrlKey || e.metaKey) {
           if (e.shiftKey) {
-            // Redo
+            // Redo (to be implemented)
           } else {
-            // Undo
+            // Undo (to be implemented)
           }
         }
         break

@@ -1,14 +1,21 @@
 import { create } from 'zustand'
+import { Point, Tool } from '../types'
+import { Polygon } from '../canvas/shapes/Polygon'
 
 interface CanvasState {
   scale: number
-  position: { x: number; y: number }
-  selectedTool: 'move' | 'polygon' | 'edit' | null
+  position: Point
+  selectedTool: Tool
+  isDrawing: boolean
+  currentPoints: Point[]
   selectedPolygonId: string | null
   actions: {
     setScale: (scale: number) => void
-    setPosition: (position: { x: number; y: number }) => void
-    setSelectedTool: (tool: 'move' | 'polygon' | 'edit' | null) => void
+    setPosition: (position: Point) => void
+    setSelectedTool: (tool: Tool) => void
+    setIsDrawing: (isDrawing: boolean) => void
+    addPoint: (point: Point) => void
+    clearPoints: () => void
     setSelectedPolygonId: (id: string | null) => void
   }
 }
@@ -16,12 +23,19 @@ interface CanvasState {
 export const useCanvasStore = create<CanvasState>((set) => ({
   scale: 1,
   position: { x: 0, y: 0 },
-  selectedTool: null,
+  selectedTool: 'move',
+  isDrawing: false,
+  currentPoints: [],
   selectedPolygonId: null,
   actions: {
     setScale: (scale) => set({ scale }),
     setPosition: (position) => set({ position }),
     setSelectedTool: (tool) => set({ selectedTool: tool }),
+    setIsDrawing: (isDrawing) => set({ isDrawing }),
+    addPoint: (point) => set((state) => ({
+      currentPoints: [...state.currentPoints, point]
+    })),
+    clearPoints: () => set({ currentPoints: [] }),
     setSelectedPolygonId: (id) => set({ selectedPolygonId: id }),
-  },
+  }
 }))
