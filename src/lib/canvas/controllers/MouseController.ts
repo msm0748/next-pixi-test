@@ -100,13 +100,19 @@ export class MouseController {
           setSelectedPolygonId(clickedPolygon.id);
           this.canvasController.getLabelLayer().selectPolygon(clickedPolygon);
 
-          // If clicking on a point, start dragging it
+          // Try to start dragging a point first
           if (clickedPolygon.startPointDrag(worldPos.x, worldPos.y)) {
             this.isDragging = true;
             this.draggedPolygon = clickedPolygon;
           } else {
-            // If clicking on a line, add a new point
-            clickedPolygon.insertPointOnLine(worldPos.x, worldPos.y);
+            // If clicking on a line, add a new point and start dragging it
+            if (clickedPolygon.insertPointOnLine(worldPos.x, worldPos.y)) {
+              this.isDragging = true;
+              this.draggedPolygon = clickedPolygon;
+              // Reset drag start position to current position for smooth dragging
+              this.dragStartX = worldPos.x;
+              this.dragStartY = worldPos.y;
+            }
           }
         } else {
           setSelectedPolygonId(null);
